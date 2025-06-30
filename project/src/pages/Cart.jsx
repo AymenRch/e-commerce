@@ -1,13 +1,95 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
-import { useCart } from '../context/CartContext';
 import CartItem from '../components/CartItem';
+import axios from 'axios';
 
 const Cart = () => {
-  const { state, updateQuantity, removeItem, clearCart } = useCart();
+  const [isLoading, setIsLoading] = useState(true);
+  const [cartItems, setCartItems] = useState([]);
 
-  if (state.items.length === 0) {
+  const increaseQuantity = (id) => {
+    const token = localStorage.getItem('token');
+    axios.put(`http://localhost:5000/auth/update-cart`, { id, action: 'increase' })
+      .then(response => {
+        // Refetch cart from backend
+        fetchCart();
+      })
+      .catch(error => {
+        console.error('Error updating cart:', error);
+      });
+  };
+
+  const decreaseQuantity = (id) => {
+    const token = localStorage.getItem('token');
+    axios.put(`http://localhost:5000/auth/update-cart`, { id, action: 'decrease' })
+      .then(response => {
+        // Refetch cart from backend
+        fetchCart();
+      })
+      .catch(error => {
+        console.error('Error updating cart:', error);
+      });
+  };
+
+  const removeItem = (id) => {
+    const token = localStorage.getItem('token');
+    axios.delete(`http://localhost:5000/auth/remove-cart-item`, { data: { id } })
+      .then(response => {
+        setCartItems(prevItems => prevItems.filter(item => item.id !== id));
+      })
+      .catch(error => {
+        console.error('Error removing cart item:', error);
+      });
+  };
+
+  const clearCart = () => {
+    const token = localStorage.getItem('token');
+    axios.delete(`http://localhost:5000/auth/clear-cart`, { data: { token } })
+      .then(response => {
+        setCartItems([]);
+      })
+      .catch(error => {
+        console.error('Error clearing cart:', error);
+      });
+  };
+
+  const fetchCart = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await axios.get(`http://localhost:5000/auth/cart/${token}`);
+      setCartItems(response.data.data);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching cart items:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCart();
+  }, []);
+
+  let total = 0;
+  for (const item of cartItems) {
+    total += item.sizes.price * item.quantity;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-cream-50 flex items-center justify-center">
+        <div className="text-center space-y-6">
+          <div className="w-24 h-24 bg-cream-200 rounded-full flex items-center justify-center mx-auto">
+            <ShoppingBag size={32} className="text-gray-400" />
+          </div>
+          <h2 className="font-serif text-2xl font-semibold text-charcoal-900 mb-2">
+            Loading your cart...
+          </h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-cream-50 flex items-center justify-center">
         <div className="text-center space-y-6">
@@ -41,18 +123,19 @@ const Cart = () => {
           {/* Header */}
           <div className="px-6 py-4 border-b border-cream-200">
             <h1 className="font-serif text-2xl font-semibold text-charcoal-900">
-              Shopping Cart ({state.items.length} {state.items.length === 1 ? 'item' : 'items'})
+              Shopping Cart ({cartItems.length} {cartItems.length === 1 ? 'item' : 'items'})
             </h1>
           </div>
 
           {/* Cart Items */}
           <div className="px-6">
-            {state.items.map((item) => (
+            {cartItems.map((item) => (
               <CartItem
-                key={`${item.product.id}-${item.selectedSize}`}
+                key={`${item.id}-${item.size}`}
                 item={item}
-                onUpdateQuantity={updateQuantity}
-                onRemove={removeItem}
+                onIncrease={() => increaseQuantity(item.id)}
+                onDecrease={() => decreaseQuantity(item.id)}
+                onRemove={() => removeItem(item.id)}
               />
             ))}
           </div>
@@ -77,7 +160,7 @@ const Cart = () => {
             <div className="space-y-2 mb-6">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal:</span>
-                <span>${state.total.toFixed(2)}</span>
+                <span>${total.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Shipping:</span>
@@ -85,7 +168,7 @@ const Cart = () => {
               </div>
               <div className="flex justify-between text-lg font-semibold text-charcoal-900 pt-2 border-t border-cream-200">
                 <span>Total:</span>
-                <span>${state.total.toFixed(2)}</span>
+                <span>${total.toFixed(2)}</span>
               </div>
             </div>
 

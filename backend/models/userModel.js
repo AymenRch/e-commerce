@@ -93,3 +93,42 @@ export async function userLogout() {
         return { error: 'Something went wrong during logout.' };
     }
 }
+
+export async function checkCart(id, product_id){
+    try {
+        const { data, error } = await supabase
+            .from('cart')
+            .select('*')
+            .eq('user_id', id)
+            .eq('product_id', product_id)
+
+        if (error) {
+            console.error('Error checking cart:', error.message);
+            return { error: error.message };
+        }
+
+        return { data };
+    } catch (err) {
+        console.error('Unexpected error while checking cart:', err.message);
+        return { error: 'Something went wrong while checking the cart.' };
+    }
+}
+
+export async function getCart(id) {
+    try {
+        const { data, error } = await supabase
+            .from('cart')
+            .select('*, product:product_id(*), sizes:size(*)')
+            .eq('user_id', id);
+
+        if (error) {
+            console.error('Error fetching cart:', error.message);
+            return { error: error.message };
+        }
+
+        return { data };
+    } catch (err) {
+        console.error('Unexpected error while fetching cart:', err.message);
+        return { error: 'Something went wrong while fetching the cart.' };
+    }
+}

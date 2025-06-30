@@ -1,3 +1,5 @@
+import supabase from '../config/db.js'
+
 export async function getOrders(){
     try {
         const { data, error } = await supabase
@@ -43,5 +45,59 @@ export async function getOrder(id) {
     } catch (err) {
         console.error('Unexpected error:', err.message);
         return { error: 'Something went wrong while fetching the order.' };
+    }
+}
+
+export async function createOrder(user_id, total, shipping_address, wilaya, ZIP_code, notes, phone){
+    try {
+        const { data, error } = await supabase
+            .from('orders')
+            .insert({
+                user_id: user_id,
+                total: total,
+                shipping_address: shipping_address,
+                status: 'pending',
+                wilaya: wilaya,
+                ZIP_CODE: ZIP_code,
+                notes: notes,
+                phone: phone
+            })
+            .select('*')
+            .single();
+
+        if (error) {
+            console.error('Error creating order:', error.message);
+            return { error: error.message };
+        }
+
+        return { data };
+    } catch (err) {
+        console.error('Unexpected error:', err.message);
+        return { error: 'Something went wrong while creating the order.' };
+    }
+}
+
+export async function addItemToOrder(order_id, product_id, quantity, size) {
+    try {
+        const { data, error } = await supabase
+            .from('order_items')
+            .insert({
+                order_id: order_id,
+                product_id: product_id,
+                quantity: quantity,
+                selected_size: size
+            })
+            .select('*')
+            .single();
+
+        if (error) {
+            console.error('Error adding item to order:', error.message);
+            return { error: error.message };
+        }
+
+        return { data };
+    } catch (err) {
+        console.error('Unexpected error:', err.message);
+        return { error: 'Something went wrong while adding the item to the order.' };
     }
 }

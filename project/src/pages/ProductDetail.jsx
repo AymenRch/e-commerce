@@ -4,16 +4,53 @@ import { ArrowLeft, Star, ShoppingBag, Heart, Share2 } from 'lucide-react';
 import { products } from '../data/products';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
+import axios from 'axios';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addItem } = useCart();
   
-  const product = products.find(p => p.id === Number(id));
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedImage, setSelectedImage] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const token = localStorage.getItem('token');
+
+        const response = await axios.get(`http://localhost:5000/items/one/${id}`);
+        setProduct(response.data.data);
+        console.log('Product data:', response.data.data);
+        const check = axios.post(`http://localhost:5000/auth/check-cart/${token}`,{product_id: id}).then((res) => {
+          if (res.status === 200) {
+           setAddedToCart(true)
+          }else{
+            setAddedToCart(false)
+          }
+        })
+        console.log('Check cart response:', addedToCart);
+      } catch (error) {
+        console.error('Error fetching product:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProduct();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Loading...</h2>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -34,29 +71,31 @@ const ProductDetail = () => {
   const images = product.images || [product.image];
   const relatedProducts = products.filter(p => 
     p.id !== product.id && 
-    (p.fragranceFamily === product.fragranceFamily || p.category === product.category)
+    (p.fragranceFamily === product.fragrance_family || p.category === product.category)
   ).slice(0, 4);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
+    const token = localStorage.getItem('token');
+
     if (!selectedSize) {
       alert('Please select a size');
       return;
     }
     
-    addItem(product, selectedSize);
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
-  };
-
-  useEffect(() => {
-    if (product.sizes.length > 0) {
-      setSelectedSize(product.sizes[0].size);
+    try {
+      const response = await axios.post(`http://localhost:5000/orders/add/${token}`, {
+        product,
+        selectedSize
+      });
+      
+      addItem(product, selectedSize);
+      setAddedToCart(true);
+      setTimeout(() => setAddedToCart(false), 2000);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Failed to add item to cart');
     }
-  }, [product]);
-
-  const selectedPrice = selectedSize 
-    ? product.sizes.find(s => s.size === selectedSize)?.price || product.price
-    : product.price;
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -136,11 +175,11 @@ const ProductDetail = () => {
 
               <div className="flex items-center space-x-4 mb-6">
                 <span className="font-serif text-3xl font-bold text-charcoal-900">
-                  ${selectedPrice}
+                  ${product.price}
                 </span>
-                {product.originalPrice && (
+                {product.original_price && (
                   <span className="text-xl text-gray-500 line-through">
-                    ${product.originalPrice}
+                    ${product.original_price}
                   </span>
                 )}
               </div>
@@ -152,7 +191,7 @@ const ProductDetail = () => {
                 {product.category}
               </span>
               <span className="bg-sage-200 px-3 py-1 rounded-full">
-                {product.fragranceFamily}
+                {product.fragrance_family}
               </span>
             </div>
 
@@ -169,7 +208,7 @@ const ProductDetail = () => {
                 <div>
                   <h4 className="font-medium text-sm text-gray-700 mb-2">Top Notes</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    {product.topNotes.map((note, index) => (
+                    {product.top_notes.map((note, index) => (
                       <li key={index}>• {note}</li>
                     ))}
                   </ul>
@@ -177,7 +216,7 @@ const ProductDetail = () => {
                 <div>
                   <h4 className="font-medium text-sm text-gray-700 mb-2">Middle Notes</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    {product.middleNotes.map((note, index) => (
+                    {product.middle_notes.map((note, index) => (
                       <li key={index}>• {note}</li>
                     ))}
                   </ul>
@@ -185,7 +224,7 @@ const ProductDetail = () => {
                 <div>
                   <h4 className="font-medium text-sm text-gray-700 mb-2">Base Notes</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    {product.baseNotes.map((note, index) => (
+                    {product.base_notes.map((note, index) => (
                       <li key={index}>• {note}</li>
                     ))}
                   </ul>
@@ -194,31 +233,35 @@ const ProductDetail = () => {
             </div>
 
             {/* Size Selection */}
-            <div>
-              <h3 className="font-semibold text-charcoal-900 mb-3">Size</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {product.sizes.map((size) => (
-                  <button
-                    key={size.size}
-                    onClick={() => setSelectedSize(size.size)}
-                    className={`p-3 border rounded-lg text-center transition-colors ${
-                      selectedSize === size.size
-                        ? 'border-charcoal-900 bg-charcoal-900 text-white'
-                        : 'border-gray-300 hover:border-charcoal-900'
-                    }`}
-                  >
-                    <div className="font-medium">{size.size}</div>
-                    <div className="text-sm opacity-75">${size.price}</div>
-                  </button>
-                ))}
+            {product.sizes && product.sizes.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-charcoal-900 mb-3">Size</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {product.sizes.map((size) => (
+                    <button
+                      key={size.id}
+                      onClick={() => setSelectedSize(size.id)}
+                      className={`p-3 border rounded-lg text-center transition-colors ${
+                        selectedSize === size.id
+                          ? 'border-charcoal-900 bg-charcoal-900 text-white'
+                          : 'border-gray-300 hover:border-charcoal-900'
+                      }`}
+                    >
+                      <div className="font-medium">{size.size} ml</div>
+                      <div className="text-sm opacity-75">{size.price}$</div>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Action Buttons */}
             <div className="space-y-4">
               <button
                 onClick={handleAddToCart}
-                disabled={!selectedSize}
+                 disabled={
+                   (product.sizes && product.sizes.length > 0 && !selectedSize) || addedToCart
+                  }
                 className={`w-full flex items-center justify-center space-x-2 py-4 px-6 rounded-lg font-medium transition-colors ${
                   addedToCart
                     ? 'bg-green-600 text-white'
@@ -233,11 +276,11 @@ const ProductDetail = () => {
 
               <div className="flex space-x-4">
                 <button className="flex-1 flex items-center justify-center space-x-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Heart size={18} />
-                  <span>Save</span>
+                  <Heart size={20} />
+                  <span>Add to Wishlist</span>
                 </button>
                 <button className="flex-1 flex items-center justify-center space-x-2 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Share2 size={18} />
+                  <Share2 size={20} />
                   <span>Share</span>
                 </button>
               </div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CreditCard, MapPin, Phone, Mail, User, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { cities } from '../data/products';
+import axios from 'axios'
 
 const Checkout = () => {
   const { state, clearCart } = useCart();
@@ -66,29 +67,33 @@ const Checkout = () => {
 
     setIsSubmitting(true);
 
-    // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Create order
-      const order = {
-        id: Date.now(),
-        items: state.items,
+      const orderData = {
         total: state.total,
-        shippingAddress,
-        status: 'pending',
-        createdAt: new Date()
+        shipping_address: shippingAddress.address,
+        wilaya: shippingAddress.city,
+        ZIP_CODE: shippingAddress.zipCode,
+        notes: shippingAddress.notes,
+        phone: shippingAddress.phone,
+        items: state.items.map(item => ({
+          product_id: item.product.id,
+          quantity: item.quantity,
+          selectedSize: item.selectedSize
+        }))
       };
+      const token = localStorage.getItem('token');
 
-      // Store order in localStorage for demo
-      const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-      localStorage.setItem('orders', JSON.stringify([...existingOrders, order]));
-
-      clearCart();
-      navigate(`/order-confirmation/${order.id}`);
+      const response = await axios.post(`http://localhost:5000/orders/create-order/${token}`, orderData);
+      if(response.status === 201) {
+        alert('Order placed successfully!');
+        clearCart();
+        navigate('/order-confirmation', { state: { order: response.data.order } });
+      }
+      
+      
     } catch (error) {
-      console.error('Order submission failed:', error);
-    } finally {
+      console.error('Error placing order:', error);
+      alert('An error occurred while placing your order. Please try again later.');
       setIsSubmitting(false);
     }
   };

@@ -24,13 +24,17 @@ const Shop = () => {
       try {
         const response = await axios.get('http://localhost:5000/items/all'); // Adjust the endpoint as needed
         setProducts(response.data);
+        setFilters(prev => ({ ...prev, category: 'all' }));
       } catch (error) {
         console.error('Error fetching products:', error);
       }
     };
-
+    
     fetchProducts();
   },[]);
+
+  
+
 
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = products.filter(product => {
@@ -41,7 +45,7 @@ const Shop = () => {
       const matchesCategory = filters.category === 'all' || product.category === filters.category;
       
       const matchesFragranceFamily = !filters.fragranceFamily || 
-                                   product.fragranceFamily === filters.fragranceFamily;
+                                   product.fragrance_family === filters.fragranceFamily;
       
       const matchesPrice = product.price >= filters.priceRange[0] && 
                           product.price <= filters.priceRange[1];

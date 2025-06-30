@@ -6,7 +6,7 @@ const router = express.Router()
 
 router.post('/create', upload.single('picture'), createItemController)
 router.get('/all', getAllItemsController)
-router.get('/items/:id', getItemController)
+router.get('/one/:id', getItemController)
 router.delete('/items/:id', deleteItemController)
 router.put('/items/:id', updatePriceController)
 router.post('/sizes/:id', addSizeController)

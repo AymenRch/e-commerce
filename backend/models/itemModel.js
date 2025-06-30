@@ -47,20 +47,33 @@ export async function getItems() {
     return data;
 }
 
-export async function getItem(id){
+export async function getItem(id) {
     const { data, error } = await supabase
         .from('products')
-        .select('*,product_sizes(*)')
+        .select('*, product_sizes(*)')
         .eq('id', id)
         .single();
-    
+
     if (error) {
-        console.error('Error fetching item:', error.message, error.details, error.hint);
-        return error;
+        console.error('Error fetching item:', {
+            message: error.message,
+            details: error.details || 'No additional details',
+            hint: error.hint || 'No hint available'
+        });
+        return { error };
     }
-    
-    return data;
+
+    const { product_sizes, ...rest } = data;
+
+    return {
+        data: {
+            ...rest,
+            sizes: product_sizes || []
+        }
+    };
 }
+
+
 
 export async function deleteItem(id) {
     const { data, error } = await supabase

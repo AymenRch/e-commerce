@@ -47,22 +47,26 @@ export async function getItemController(req, res) {
     const { id } = req.params;
 
     try {
-        const data = await getItem(id);
+        const response = await getItem(id);
 
-        if (data.error) {
-            return res.status(500).json({ error: data.error.message });
+        if (response.error) {
+            return res.status(500).json({ error: response.error.message });
         }
 
-        if (!data) {
+        if (!response.data) {
             return res.status(404).json({ error: 'Item not found' });
         }
 
-        return res.status(200).json({data: data.products, sizes: data.product_sizes});
+        console.log('Item data:', response.data);
+        return res.status(200).json({ data: response.data });
+
     } catch (error) {
         console.error('Error in getItemController:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
+
+
 
 export async function deleteItemController(req, res) {
     const {id} = req.params;

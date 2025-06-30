@@ -51,7 +51,7 @@ const About = () => {
             <div className="relative">
               <div className="aspect-square bg-gradient-to-br from-sage-100 to-cream-300 rounded-3xl overflow-hidden">
                 <img
-                  src="https://images.pexels.com/photos/1961804/pexels-photo-1961804.jpeg"
+                  src="https://media.glamourmagazine.co.uk/photos/639362467b473e3dc755fb1e/16:9/w_2580,c_limit/BEST%20PERFUME%20FOR%20WOMEN%2091222_SF.jpg?mbid=social_retweet"
                   alt="Perfume Collection"
                   className="w-full h-full object-cover"
                 />
