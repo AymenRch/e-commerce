@@ -21,7 +21,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const success = await axios.post('http://localhost:5000/auth/login',{
+      const success = await axios.post('https://ecom-back-ezn3.onrender.com/auth/login',{
         email,
         password
       });

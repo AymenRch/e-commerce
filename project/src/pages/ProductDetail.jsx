@@ -22,10 +22,10 @@ const ProductDetail = () => {
       try {
         const token = localStorage.getItem('token');
 
-        const response = await axios.get(`http://localhost:5000/items/one/${id}`);
+        const response = await axios.get(`https://ecom-back-ezn3.onrender.com/items/one/${id}`);
         setProduct(response.data.data);
         console.log('Product data:', response.data.data);
-        const check = axios.post(`http://localhost:5000/auth/check-cart/${token}`,{product_id: id}).then((res) => {
+        const check = axios.post(`https://ecom-back-ezn3.onrender.com/auth/check-cart/${token}`,{product_id: id}).then((res) => {
           if (res.status === 200) {
            setAddedToCart(true)
           }else{
@@ -83,7 +83,7 @@ const ProductDetail = () => {
     }
     
     try {
-      const response = await axios.post(`http://localhost:5000/orders/add/${token}`, {
+      const response = await axios.post(`https://ecom-back-ezn3.onrender.com/orders/add/${token}`, {
         product,
         selectedSize
       });

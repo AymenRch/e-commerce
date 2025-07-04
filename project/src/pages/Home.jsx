@@ -1,11 +1,24 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, Truck, Shield, RefreshCw } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
-import { products } from '../data/products';
+import axios from 'axios'
 
 const Home = () => {
-  const featuredProducts = products.filter(product => product.featured);
+  const [products, setProducts] = useState([]);
+
+  useEffect(()=>{
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get('https://ecom-back-ezn3.onrender.com/items/all'); // Adjust the endpoint as needed
+        setProducts(response.data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+    
+    fetchProducts();
+  },[]);
 
   return (
     <div className="min-h-screen">
@@ -142,7 +155,7 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {featuredProducts.map((product) => (
+            {products.slice(0,4).map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

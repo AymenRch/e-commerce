@@ -22,7 +22,7 @@ const Shop = () => {
   useEffect(()=>{
     const fetchProducts = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/items/all'); // Adjust the endpoint as needed
+        const response = await axios.get('https://ecom-back-ezn3.onrender.com/items/all'); // Adjust the endpoint as needed
         setProducts(response.data);
         setFilters(prev => ({ ...prev, category: 'all' }));
       } catch (error) {

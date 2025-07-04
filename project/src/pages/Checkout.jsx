@@ -89,7 +89,7 @@ const Checkout = () => {
       };
       const token = localStorage.getItem('token');
 
-      const response = await axios.post(`http://localhost:5000/orders/create-order/${token}`, orderData);
+      const response = await axios.post(`https://ecom-back-ezn3.onrender.com/orders/create-order/${token}`, orderData);
       if(response.status === 201) {
         alert('Order placed successfully!');
         navigate('/order-confirmation', { state: { order: response.data.order } });
@@ -106,7 +106,7 @@ const Checkout = () => {
   const fetchCart = async () => {
     const token = localStorage.getItem('token');
     try {
-      const response = await axios.get(`http://localhost:5000/auth/cart/${token}`);
+      const response = await axios.get(`https://ecom-back-ezn3.onrender.com/auth/cart/${token}`);
       setCartItems(response.data.data);
       setIsLoading(false);
     } catch (error) {

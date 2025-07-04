@@ -11,7 +11,7 @@ const Cart = () => {
 
   const increaseQuantity = (id) => {
     const token = localStorage.getItem('token');
-    axios.put(`http://localhost:5000/auth/update-cart`, { id, action: 'increase' })
+    axios.put(`https://ecom-back-ezn3.onrender.com/auth/update-cart`, { id, action: 'increase' })
       .then(response => {
         // Refetch cart from backend
         fetchCart();
@@ -24,7 +24,7 @@ const Cart = () => {
   const decreaseQuantity = (id) => {
     const token = localStorage.getItem('token');
 
-    axios.put(`http://localhost:5000/auth/update-cart`, { id, action: 'decrease' })
+    axios.put(`https://ecom-back-ezn3.onrender.com/auth/update-cart`, { id, action: 'decrease' })
       .then(response => {
         // Refetch cart from backend
         fetchCart();
@@ -36,7 +36,7 @@ const Cart = () => {
 
   const removeItem = (id) => {
     const token = localStorage.getItem('token');
-    axios.delete(`http://localhost:5000/auth/remove-cart-item`, { data: { id } })
+    axios.delete(`https://ecom-back-ezn3.onrender.com/auth/remove-cart-item`, { data: { id } })
       .then(response => {
         setCartItems(prevItems => prevItems.filter(item => item.id !== id));
       })
@@ -47,7 +47,7 @@ const Cart = () => {
 
   const clearCart = () => {
     const token = localStorage.getItem('token');
-    axios.delete(`http://localhost:5000/auth/clear-cart`, { data: { token } })
+    axios.delete(`https://ecom-back-ezn3.onrender.com/auth/clear-cart`, { data: { token } })
       .then(response => {
         setCartItems([]);
       })
@@ -59,7 +59,7 @@ const Cart = () => {
   const fetchCart = async () => {
     const token = localStorage.getItem('token');
     try {
-      const response = await axios.get(`http://localhost:5000/auth/cart/${token}`);
+      const response = await axios.get(`https://ecom-back-ezn3.onrender.com/auth/cart/${token}`);
       setCartItems(response.data.data);
       setIsLoading(false);
     } catch (error) {
