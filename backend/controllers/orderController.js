@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config();
-import {createOrder as createOrderModel, addItemToOrder} from '../models/ordersModel.js';
+import {createOrder as createOrderModel, addItemToOrder, update} from '../models/ordersModel.js';
 
 export async function createOrder(req,res){
 
@@ -37,3 +37,21 @@ export async function createOrder(req,res){
         
     }
 }
+
+export async function updateQuantityController(req, res) {
+    const { id , action } = req.body;
+    try {
+        const result = await update(id, action);
+        if( result.error) {
+            console.error('Error updating quantity:', result.error);
+            return res.status(500).json({ error: result.error });
+        }
+        console.log('Quantity updated successfully:', result.data);
+        return res.status(200).json({ message: 'Quantity updated successfully', data: result.data });
+    } catch (error) {
+        console.error('Error updating quantity:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+
+}
+ 

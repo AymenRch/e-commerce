@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, MapPin, Phone, Mail, User, Truck } from 'lucide-react';
-import { useCart } from '../context/CartContext';
 import { cities } from '../data/products';
 import axios from 'axios'
 
 const Checkout = () => {
-  const { state, clearCart } = useCart();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [cartItems, setCartItems] = useState([]);
   
   const [shippingAddress, setShippingAddress] = useState({
     fullName: '',
@@ -19,6 +19,7 @@ const Checkout = () => {
     zipCode: '',
     notes: ''
   });
+
 
   const [errors, setErrors] = useState({});
 
@@ -69,16 +70,21 @@ const Checkout = () => {
 
     try {
       const orderData = {
-        total: state.total,
+        total: total,
         shipping_address: shippingAddress.address,
         wilaya: shippingAddress.city,
         ZIP_CODE: shippingAddress.zipCode,
         notes: shippingAddress.notes,
         phone: shippingAddress.phone,
-        items: state.items.map(item => ({
-          product_id: item.product.id,
+        items: cartItems.map(item => ({
+          product: {
+            id: item.product.id,
+            name: item.product.name,
+            image: item.product.image,
+            price: item.product.price
+          },
           quantity: item.quantity,
-          selectedSize: item.selectedSize
+          selectedSize: item.sizes.size
         }))
       };
       const token = localStorage.getItem('token');
@@ -86,7 +92,6 @@ const Checkout = () => {
       const response = await axios.post(`http://localhost:5000/orders/create-order/${token}`, orderData);
       if(response.status === 201) {
         alert('Order placed successfully!');
-        clearCart();
         navigate('/order-confirmation', { state: { order: response.data.order } });
       }
       
@@ -98,10 +103,26 @@ const Checkout = () => {
     }
   };
 
-  if (state.items.length === 0) {
-    navigate('/cart');
-    return null;
+  const fetchCart = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await axios.get(`http://localhost:5000/auth/cart/${token}`);
+      setCartItems(response.data.data);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching cart items:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCart();
+  }, []);
+
+  let total = 0;
+  for (const item of cartItems) {
+    total += item.sizes.price * item.quantity;
   }
+
 
   return (
     <div className="min-h-screen bg-cream-50">
@@ -285,7 +306,7 @@ const Checkout = () => {
               </h2>
 
               <div className="space-y-4 mb-6">
-                {state.items.map((item) => (
+                {cartItems.map((item) => (
                   <div key={`${item.product.id}-${item.selectedSize}`} className="flex items-center space-x-4">
                     <div className="w-16 h-16 bg-cream-100 rounded-lg overflow-hidden">
                       <img
@@ -297,12 +318,12 @@ const Checkout = () => {
                     <div className="flex-1">
                       <h3 className="font-medium text-charcoal-900">{item.product.name}</h3>
                       <p className="text-sm text-gray-600">
-                        {item.selectedSize}ml × {item.quantity}
+                        {item.sizes.size}ml × {item.quantity}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-charcoal-900">
-                        ${(item.product.price * item.quantity).toFixed(2)}
+                        {(item.product.price * item.quantity).toFixed(2)}$
                       </p>
                     </div>
                   </div>
@@ -312,7 +333,7 @@ const Checkout = () => {
               <div className="space-y-2 pt-4 border-t border-cream-200">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal:</span>
-                  <span>${state.total.toFixed(2)}</span>
+                  <span>{total.toFixed(2)}$</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping:</span>
@@ -320,7 +341,7 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between text-lg font-semibold text-charcoal-900 pt-2 border-t border-cream-200">
                   <span>Total:</span>
-                  <span>${state.total.toFixed(2)}</span>
+                  <span>${total.toFixed(2)}</span>
                 </div>
               </div>
             </div>

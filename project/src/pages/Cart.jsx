@@ -7,6 +7,7 @@ import axios from 'axios';
 const Cart = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [cartItems, setCartItems] = useState([]);
+  
 
   const increaseQuantity = (id) => {
     const token = localStorage.getItem('token');
@@ -22,6 +23,7 @@ const Cart = () => {
 
   const decreaseQuantity = (id) => {
     const token = localStorage.getItem('token');
+
     axios.put(`http://localhost:5000/auth/update-cart`, { id, action: 'decrease' })
       .then(response => {
         // Refetch cart from backend
